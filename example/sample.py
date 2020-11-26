@@ -30,7 +30,7 @@ if __name__ == '__main__':
             ('nom', nominal_transformer, nominal_features),
         ],
         remainder='passthrough')
-
+    
     data = preprocessor.fit_transform(df)
 
     print(data)

@@ -6,6 +6,25 @@ from sklearn import preprocessing
 from sklearn import impute
 
 
+class ColumnExtractor(base.TransformerMixin):
+
+    def __init__(self, dtype_include=None, dtype_exclude=None, columns=None):
+        self.dtype_include = dtype_include
+        self.dtype_exclude = dtype_exclude
+        self.columns = columns
+        
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X):
+        if isinstance(X, pd.DataFrame):
+            if self.dtype_include is not None or self.dtype_exclude is not None:
+                return X.select_dtypes(include=self.dtype_include, exclude=self.dtype_exclude)
+            else:
+                return X[self.columns]
+        else:
+            return X
+    
 class ColumnSelector(compose.make_column_selector):
 
     def __init__(self, pattern=None, *, dtype_include=None, dtype_exclude=None, columns=None):
@@ -38,11 +57,22 @@ class FunctionTransformer(preprocessing.FunctionTransformer):
             Xf = pd.DataFrame(Xf, index=X.index, columns=X.columns)
         return Xf
 
-
+    def inverse_transform(self, X):
+        Xf = super().inverse_transform(X)
+        if isinstance(X, pd.DataFrame):
+            Xf = pd.DataFrame(Xf, index=X.index, columns=X.columns)
+        return Xf
+    
 class OrdinalEncoder(preprocessing.OrdinalEncoder):
 
     def transform(self, X):
         Xf = super().transform(X)
+        if isinstance(X, pd.DataFrame):
+            Xf = pd.DataFrame(Xf, index=X.index, columns=X.columns)
+        return Xf
+    
+    def inverse_transform(self, X):
+        Xf = super().inverse_transform(X)
         if isinstance(X, pd.DataFrame):
             Xf = pd.DataFrame(Xf, index=X.index, columns=X.columns)
         return Xf
@@ -56,6 +86,15 @@ class OneHotEncoder(preprocessing.OneHotEncoder):
             Xf = pd.DataFrame(Xf.toarray(), index=X.index, columns=self.get_feature_names(X.columns))
         return Xf
 
+    def inverse_transform(self, X):
+        Xf = super().inverse_transform(X)
+        if isinstance(X, pd.DataFrame):
+            try:
+                col_name = X.columns.tolist()[0].split('_')[0]
+                Xf = pd.DataFrame(Xf, index=X.index, columns=[col_name])
+            except RuntimeError:
+                pass
+        return Xf
 
 class SimpleImputer(impute.SimpleImputer):
 
@@ -69,11 +108,16 @@ class SimpleImputer(impute.SimpleImputer):
 class StandardScaler(preprocessing.StandardScaler):
 
     def transform(self, X, copy=None):
-        Xf = super().transform(X)
+        Xf = super().transform(X, copy=None)
         if isinstance(X, pd.DataFrame):
             Xf = pd.DataFrame(Xf, index=X.index, columns=X.columns)
         return Xf
-
+    
+    def inverse_transform(self, X, copy=None):
+        Xf = super().inverse_transform(X, copy=None)
+        if isinstance(X, pd.DataFrame):
+            Xf = pd.DataFrame(Xf, index=X.index, columns=X.columns)
+        return Xf
 
 class MinMaxScaler(preprocessing.MinMaxScaler):
 
@@ -82,7 +126,12 @@ class MinMaxScaler(preprocessing.MinMaxScaler):
         if isinstance(X, pd.DataFrame):
             Xf = pd.DataFrame(Xf, index=X.index, columns=X.columns)
         return Xf
-
+    
+    def inverse_transform(self, X):
+        Xf = super().inverse_transform(X)
+        if isinstance(X, pd.DataFrame):
+            Xf = pd.DataFrame(Xf, index=X.index, columns=X.columns)
+        return Xf
 
 class RobustScaler(preprocessing.MinMaxScaler):
 
@@ -91,8 +140,14 @@ class RobustScaler(preprocessing.MinMaxScaler):
         if isinstance(X, pd.DataFrame):
             Xf = pd.DataFrame(Xf, index=X.index, columns=X.columns)
         return Xf
-
-
+    
+    def inverse_transform(self, X):
+        Xf = super().inverse_transform(X)
+        if isinstance(X, pd.DataFrame):
+            Xf = pd.DataFrame(Xf, index=X.index, columns=X.columns)
+        return Xf
+    
+    
 class ColumnTransformer(compose.ColumnTransformer):
 
     def _hstack(self, Xs):
