@@ -133,7 +133,7 @@ class MinMaxScaler(preprocessing.MinMaxScaler):
             Xf = pd.DataFrame(Xf, index=X.index, columns=X.columns)
         return Xf
 
-class RobustScaler(preprocessing.MinMaxScaler):
+class RobustScaler(preprocessing.RobustScaler):
 
     def transform(self, X):
         Xf = super().transform(X)
