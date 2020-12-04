@@ -6,6 +6,7 @@ def readme():
 
 def requirement():
     return [
+        'matplotlib',
         'pandas',
         'scikit-learn'
     ]
@@ -13,7 +14,7 @@ def requirement():
 setup(
     name='skl-utils',
     packages=find_packages(),
-    version='0.0.2',
+    version='0.0.3',
     description='Scikit-Learn Ultilities',
     long_description=readme(),
     long_description_content_type='text/markdown',
