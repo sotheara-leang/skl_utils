@@ -1,3 +1,5 @@
+import numpy as np
+import matplotlib.pyplot as plt
 import pandas as pd
 from functools import reduce
 from sklearn import base
@@ -12,7 +14,7 @@ class ColumnExtractor(base.TransformerMixin):
         self.dtype_include = dtype_include
         self.dtype_exclude = dtype_exclude
         self.columns = columns
-        
+
     def fit(self, X, y=None):
         return self
 
@@ -24,7 +26,8 @@ class ColumnExtractor(base.TransformerMixin):
                 return X[self.columns]
         else:
             return X
-    
+
+
 class ColumnSelector(compose.make_column_selector):
 
     def __init__(self, pattern=None, *, dtype_include=None, dtype_exclude=None, columns=None):
@@ -62,7 +65,8 @@ class FunctionTransformer(preprocessing.FunctionTransformer):
         if isinstance(X, pd.DataFrame):
             Xf = pd.DataFrame(Xf, index=X.index, columns=X.columns)
         return Xf
-    
+
+
 class OrdinalEncoder(preprocessing.OrdinalEncoder):
 
     def transform(self, X):
@@ -70,7 +74,7 @@ class OrdinalEncoder(preprocessing.OrdinalEncoder):
         if isinstance(X, pd.DataFrame):
             Xf = pd.DataFrame(Xf, index=X.index, columns=X.columns)
         return Xf
-    
+
     def inverse_transform(self, X):
         Xf = super().inverse_transform(X)
         if isinstance(X, pd.DataFrame):
@@ -96,6 +100,7 @@ class OneHotEncoder(preprocessing.OneHotEncoder):
                 pass
         return Xf
 
+
 class SimpleImputer(impute.SimpleImputer):
 
     def transform(self, X):
@@ -112,12 +117,13 @@ class StandardScaler(preprocessing.StandardScaler):
         if isinstance(X, pd.DataFrame):
             Xf = pd.DataFrame(Xf, index=X.index, columns=X.columns)
         return Xf
-    
+
     def inverse_transform(self, X, copy=None):
         Xf = super().inverse_transform(X, copy=None)
         if isinstance(X, pd.DataFrame):
             Xf = pd.DataFrame(Xf, index=X.index, columns=X.columns)
         return Xf
+
 
 class MinMaxScaler(preprocessing.MinMaxScaler):
 
@@ -126,12 +132,13 @@ class MinMaxScaler(preprocessing.MinMaxScaler):
         if isinstance(X, pd.DataFrame):
             Xf = pd.DataFrame(Xf, index=X.index, columns=X.columns)
         return Xf
-    
+
     def inverse_transform(self, X):
         Xf = super().inverse_transform(X)
         if isinstance(X, pd.DataFrame):
             Xf = pd.DataFrame(Xf, index=X.index, columns=X.columns)
         return Xf
+
 
 class RobustScaler(preprocessing.RobustScaler):
 
@@ -140,14 +147,14 @@ class RobustScaler(preprocessing.RobustScaler):
         if isinstance(X, pd.DataFrame):
             Xf = pd.DataFrame(Xf, index=X.index, columns=X.columns)
         return Xf
-    
+
     def inverse_transform(self, X):
         Xf = super().inverse_transform(X)
         if isinstance(X, pd.DataFrame):
             Xf = pd.DataFrame(Xf, index=X.index, columns=X.columns)
         return Xf
-    
-    
+
+
 class ColumnTransformer(compose.ColumnTransformer):
 
     def _hstack(self, Xs):
@@ -159,3 +166,25 @@ class ColumnTransformer(compose.ColumnTransformer):
                 return super()._hstack(Xs)
         except RuntimeError:
             return super()._hstack(Xs)
+
+
+def plot_decision_boundary(clf, x1, x2, y, labels=['0', '1'], cmap=plt.cm.Paired, figsize=(8, 7), step=0.1):
+    # set figure size
+    plt.figure(figsize=figsize)
+
+    # generate mesh grid
+    x_min, x_max = x1.min() - 20 * step, x1.max() + 20 * step
+    y_min, y_max = x2.min() - 20 * step, x2.max() + 20 * step
+    xx, yy = np.meshgrid(np.arange(x_min, x_max, step), np.arange(y_min, y_max, step))
+
+    # predict labels in mesh grid
+    z = clf.predict(np.c_[xx.ravel(), yy.ravel()]).reshape(xx.shape)
+
+    # plot mesh grid
+    plt.pcolormesh(xx, yy, z, cmap=cmap, alpha=.9)
+
+    # plot data points
+    scatter = plt.scatter(x1, x2, c=y, cmap=cmap, edgecolors='k', s=50, linewidths=1)
+    plt.legend(handles=scatter.legend_elements()[0], labels=labels)
+
+    return plt
